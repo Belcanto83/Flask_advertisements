@@ -1,4 +1,5 @@
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 from db_schema import db
 
@@ -15,8 +16,14 @@ class GenericModelMixin:
         db.session.commit()
 
     def create_from_json(self):
-        db.session.add(self)
-        db.session.commit()
+        errors = []
+        try:
+            db.session.add(self)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            errors.append({'status_code': 400, 'message': 'Integrity error: item may already exist'})
+        return errors
 
 
 class User(db.Model, GenericModelMixin):

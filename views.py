@@ -39,9 +39,11 @@ class GroupAPI(MethodView):
         return jsonify([item.to_json() for item in items])
 
     def post(self):
-        errors = self.validator.validate(request.json)
-        if errors:
-            return jsonify(errors), 400
+        validation_errors = self.validator.validate(request.json)
+        if validation_errors:
+            return jsonify(validation_errors), 400
         item = self.model(**request.json)
-        item.create_from_json()
+        db_errors = item.create_from_json()
+        if db_errors:
+            return jsonify(db_errors), 400
         return jsonify(item.to_json())
