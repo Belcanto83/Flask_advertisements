@@ -6,10 +6,16 @@ from db_schema import db
 
 class GenericModelMixin:
     def update_from_json(self, cleaned_data):
+        errors = []
         for field, value in cleaned_data.items():
             setattr(self, field, value)
-        db.session.add(self)
-        db.session.commit()
+        try:
+            db.session.add(self)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            errors.append({'status_code': 400, 'message': 'Integrity error: item may already exist'})
+        return errors
 
     def delete_item(self):
         db.session.delete(self)

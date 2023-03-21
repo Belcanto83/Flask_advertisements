@@ -17,10 +17,12 @@ class ItemAPI(MethodView):
 
     def patch(self, item_id):
         item = self._get_item(item_id)
-        errors = self.validator.validate(request.json)
-        if errors:
-            return jsonify(errors), 400
-        item.update_from_json(request.json)
+        validation_errors = self.validator.validate(request.json)
+        if validation_errors:
+            return jsonify(validation_errors), 400
+        db_errors = item.update_from_json(request.json)
+        if db_errors:
+            return jsonify(db_errors), 400
         return jsonify(item.to_json())
 
     def delete(self, item_id):
